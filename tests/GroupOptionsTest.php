@@ -27,9 +27,11 @@ class GroupOptionsTest extends TestCase
         $css = (string) file_get_contents(__DIR__.'/../resources/dist/group-summaries.css');
 
         $this->assertStringContainsString("[data-fi-gs~='hide-trailing']", $css);
-        $this->assertStringContainsString('> tbody > tr.fi-ta-summary-row', $css);
-        // Page / all-records totals live in the same <tbody>, after the summary header row: they must stay visible.
-        $this->assertStringContainsString("> tbody > tr.fi-ta-summary-header-row ~ tr.fi-ta-summary-row {\n    display: table-row;", $css);
+        // Which rows the rule hides is checked on rendered tables in HideTrailingSummaryTest; here: no
+        // "show again" rule anchored on the page-summary header row, which only exists on multi-page tables.
+        $this->assertStringNotContainsString('display: table-row', $css);
+        // The marker alone (no description, no strip) must not leave an empty paragraph.
+        $this->assertStringContainsString('.fi-ta-group-description:has(> [data-fi-gs]:only-child)', $css);
         $this->assertDoesNotMatchRegularExpression('/(?<![-\w])(left|right|margin-left|margin-right|padding-left|padding-right)\s*:/', $css);
         $this->assertSame($css, (string) file_get_contents(__DIR__.'/../resources/css/group-summaries.css'));
     }

@@ -10,9 +10,11 @@ use Filament\Tables\Columns\Summarizers\Values;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
 
 /**
@@ -25,6 +27,9 @@ use Illuminate\Support\HtmlString;
  */
 class SummaryGroup extends Group
 {
+    /** Tags that may not sit inside a `<p>` and are turned into `<span>` in summarizer HTML. */
+    private const BLOCK_TAGS = 'div|ul|ol|li|p|dl|dt|dd|table|thead|tbody|tfoot|tr|td|th|section|header|footer|h[1-6]';
+
     protected bool|Closure $summariesInHeader = false;
 
     protected bool|Closure $hidesTrailingSummary = false;
@@ -183,26 +188,33 @@ class SummaryGroup extends Group
     }
 
     /**
-     * The group description sits in a `<p>`: a block tag (div, ul) would close it and break the
-     * markup, so the summarizer's root `<div>` is turned into a `<span>`, and the bulleted list of
-     * `Values` is flattened to a comma-separated line.
+     * The group description sits in a `<p>`: a block tag (div, ul, li, ...) would close it and break
+     * the markup. So the bulleted list of `Values` is flattened to a comma-separated line, and in any
+     * other summarizer's HTML (`Count::icons()`, custom ones) every block tag becomes a `<span>`.
      */
     private function renderSummarizer(Summarizer $summarizer): string
     {
         if ($summarizer instanceof Values) {
+            $state = $summarizer->getState();
+
             $values = array_map(
-                fn (mixed $item): string => e((string) $summarizer->formatState($item)),
-                (array) $summarizer->getState(),
+                function (mixed $item) use ($summarizer): string {
+                    $formatted = $summarizer->formatState($item);
+
+                    return $formatted instanceof Htmlable ? $formatted->toHtml() : e($formatted);
+                },
+                $state instanceof Arrayable ? $state->toArray() : Arr::wrap($state),
             );
 
+            $attributes = $summarizer->getExtraAttributeBag()->class(['fi-ta-values-summary'])->toHtml();
             $label = filled($label = $summarizer->getLabel()) ? '<span class="fi-ta-values-summary-label">'.e($label).'</span> ' : '';
 
-            return '<span class="fi-ta-values-summary">'.$label.'<span>'.implode(', ', $values).'</span></span>';
+            return '<span '.$attributes.'>'.$label.'<span>'.implode(', ', $values).'</span></span>';
         }
 
         $html = trim((string) preg_replace('/\s+/', ' ', $summarizer->toEmbeddedHtml()));
 
-        return (string) preg_replace(['/\A<div\b/', '/<\/div>\z/'], ['<span', '</span>'], $html);
+        return (string) preg_replace('/<(\/?)(?:'.self::BLOCK_TAGS.')\b/i', '<$1span', $html);
     }
 
     /**

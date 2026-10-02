@@ -42,13 +42,24 @@ class FilamentInternalsTest extends TestCase
         );
     }
 
-    public function test_group_summary_rows_still_sit_in_tbody_and_totals_in_tfoot(): void
+    /**
+     * The hide-trailing CSS tells per-group summary rows from the totals by what precedes them:
+     * a per-group row directly follows a record row; the totals follow a summary row or the
+     * page-summary header row, which only exists on multi-page tables.
+     */
+    public function test_summary_rows_markup_the_hide_trailing_css_relies_on(): void
     {
-        $view = $this->tablesView();
+        $views = dirname((string) (new ReflectionClass(Group::class))->getFileName(), 3).'/resources/views';
+        $index = $this->tablesView();
+        $summary = (string) file_get_contents($views.'/components/summary/index.blade.php');
+        $row = (string) file_get_contents($views.'/components/summary/row.blade.php');
 
-        $this->assertStringContainsString('<x-filament-tables::summary.row', $view);
-        $this->assertMatchesRegularExpression('/<\/tbody>\s*@endif\s*@if \(\(\$records !== null\) && count\(\$records\) && \$contentFooter\)\s*<tfoot>/', $view);
-        $this->assertStringContainsString('fi-ta-summary-row', (string) file_get_contents(dirname((new ReflectionClass(Group::class))->getFileName() ?: '', 3).'/resources/views/components/summary/row.blade.php'));
+        $this->assertStringContainsString("\$attributes->class(['fi-ta-row fi-ta-summary-row'])", $row);
+        $this->assertStringContainsString('<tr class="fi-ta-row fi-ta-summary-header-row', $summary);
+        $this->assertStringContainsString('$hasPageSummary = $pageSummary && (! $groupsOnly) && $records instanceof Paginator && $records->hasPages();', $summary);
+        $this->assertMatchesRegularExpression('/@if \(\$hasPageSummary\)\s*<tr class="fi-ta-row fi-ta-summary-header-row/', $summary);
+        // Group rows and the totals are drawn in the same <tbody> as the records.
+        $this->assertMatchesRegularExpression('/<x-filament-tables::summary\s+:actions="\$hasRecordActionsForAnyRecord"/', $index);
     }
 
     #[DataProvider('signatures')]

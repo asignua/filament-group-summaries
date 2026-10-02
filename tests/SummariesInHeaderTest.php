@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Asignua\FilamentGroupSummaries\Tests;
 
 use Asignua\FilamentGroupSummaries\SummaryGroup;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Count;
 use Filament\Tables\Columns\Summarizers\Values;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 use Livewire\Livewire;
 use Workbench\App\OrdersTable;
 
@@ -151,6 +154,51 @@ class SummariesInHeaderTest extends TestCase
         $raw = $this->headerOf($html, 'paid', raw: true);
         $this->assertStringNotContainsString('<ul', $raw);
         $this->assertStringNotContainsString('<div', $raw);
+    }
+
+    public function test_values_summarizer_accepts_a_collection_htmlable_values_and_extra_attributes(): void
+    {
+        $this->seedOrders();
+        OrdersTable::$configure = fn (Table $table, SummaryGroup $group): Table => $table
+            ->columns([
+                TextColumn::make('reference')->summarize(
+                    Values::make()
+                        ->label('Refs')
+                        ->using(fn ($query) => $query->orderBy('reference')->pluck('reference'))
+                        ->formatStateUsing(fn (string $state): HtmlString => new HtmlString('<em>'.e($state).'</em>'))
+                        ->extraAttributes(['data-test' => 'refs']),
+                ),
+                TextColumn::make('status'),
+            ])
+            ->defaultGroup($group->summariesInHeader());
+
+        $raw = $this->headerOf(Livewire::test(OrdersTable::class)->html(), 'paid', raw: true);
+
+        $this->assertStringContainsString('<em>R1</em>, <em>R2</em>', $raw);
+        $this->assertStringContainsString('data-test="refs"', $raw);
+    }
+
+    public function test_icon_count_summarizer_does_not_emit_block_tags_into_the_paragraph(): void
+    {
+        $this->seedOrders();
+        OrdersTable::$configure = fn (Table $table, SummaryGroup $group): Table => $table
+            ->columns([
+                TextColumn::make('reference'),
+                IconColumn::make('status')
+                    ->icon(fn (string $state): string => $state === 'paid' ? 'heroicon-o-check-circle' : 'heroicon-o-clock')
+                    ->summarize(Count::make()->icons()->label('States')),
+            ])
+            ->defaultGroup($group->summariesInHeader()->hideTrailingSummary());
+
+        $raw = $this->headerOf(Livewire::test(OrdersTable::class)->html(), 'paid', raw: true);
+
+        $this->assertStringContainsString('fi-ta-icon-count-summary', $raw);
+        $this->assertStringContainsString('<svg', $raw);
+        $this->assertStringContainsString('data-fi-gs="hide-trailing"', $raw, 'The marker must still be inside the description paragraph.');
+
+        foreach (['<div', '<ul', '<li', '</div>', '</ul>', '</li>'] as $tag) {
+            $this->assertStringNotContainsString($tag, $raw);
+        }
     }
 
     public function test_plain_group_and_summary_off_leave_the_header_untouched(): void

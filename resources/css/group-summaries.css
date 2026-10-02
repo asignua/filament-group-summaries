@@ -27,7 +27,10 @@
 
 .fi-gs-item .fi-ta-text-summary,
 .fi-gs-item .fi-ta-range-summary,
-.fi-gs-item .fi-ta-values-summary {
+.fi-gs-item .fi-ta-values-summary,
+.fi-gs-item .fi-ta-icon-count-summary,
+.fi-gs-item .fi-ta-icon-count-summary > span,
+.fi-gs-item .fi-ta-icon-count-summary > span > span {
     display: inline-flex;
     flex-wrap: wrap;
     align-items: baseline;
@@ -36,9 +39,16 @@
     width: auto;
 }
 
+.fi-gs-item .fi-ta-icon-count-summary svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    align-self: center;
+}
+
 .fi-gs-item .fi-ta-text-summary-label,
 .fi-gs-item .fi-ta-range-summary-label,
-.fi-gs-item .fi-ta-values-summary-label {
+.fi-gs-item .fi-ta-values-summary-label,
+.fi-gs-item .fi-ta-icon-count-summary-label {
     font-weight: 500;
     color: var(--gray-950, #030712);
 }
@@ -56,6 +66,7 @@
 .dark .fi-gs-item .fi-ta-text-summary-label,
 .dark .fi-gs-item .fi-ta-range-summary-label,
 .dark .fi-gs-item .fi-ta-values-summary-label,
+.dark .fi-gs-item .fi-ta-icon-count-summary-label,
 .dark .fi-gs-item .fi-ta-text-summary > span:not(.fi-ta-text-summary-label),
 .dark .fi-gs-item .fi-ta-range-summary > span:not(.fi-ta-range-summary-label) {
     color: #fff;
@@ -67,20 +78,24 @@
 
 /*
  * hideTrailingSummary(): the per-group summary rows Filament draws after each group.
- * Filament 5 draws the page / all-records totals in the same <tbody>, after one
- * `tr.fi-ta-summary-header-row`; the per-group rows all come BEFORE that header row. So every
- * summary row is hidden, then the ones that follow the header row are shown again. The marker is
- * inside a group header, so a groups-only table (no headers) is never affected. If this
- * selector ever stops matching, the rows simply stay visible: nothing breaks.
+ * In Filament 5 the page / all-records totals are drawn in the same <tbody>, and the page-summary
+ * header row (`tr.fi-ta-summary-header-row`) only exists when the table has more than one page, so
+ * it cannot be the anchor. What tells the rows apart is what precedes them: a per-group row always
+ * comes right after a record row (the last record of its group), while the totals come after a
+ * per-group row or after the page-summary header row. The marker is inside a group header, so a
+ * groups-only table (no headers) is never affected. If this selector ever stops matching, the rows
+ * simply stay visible: nothing breaks.
  */
-table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-summary-row {
+table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-row:not(.fi-ta-summary-row):not(.fi-ta-summary-header-row) + tr.fi-ta-summary-row {
     display: none;
 }
 
-table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-summary-header-row ~ tr.fi-ta-summary-row {
-    display: table-row;
+/* Content (grid / stack) layout: each per-group summary is its own <table> inside .fi-ta-content; the totals table is outside it. */
+.fi-ta-content:has([data-fi-gs~='hide-trailing']) > table:has(> tbody > tr.fi-ta-summary-row) {
+    display: none;
 }
 
-.fi-ta-content:has([data-fi-gs~='hide-trailing']) > table:has(> tbody > tr.fi-ta-summary-row) {
+/* hideTrailingSummary() with no description and no header summaries: the marker alone must not leave an empty paragraph. */
+.fi-ta-group-description:has(> [data-fi-gs]:only-child) {
     display: none;
 }
