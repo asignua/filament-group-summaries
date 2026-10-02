@@ -1,0 +1,62 @@
+{
+    "name": "asignua/filament-group-summaries",
+    "description": "Column summaries in the group header row of Filament tables, a default direction per group, and per-group control of the trailing summary row.",
+    "keywords": ["filament", "filament-plugin", "laravel", "table", "grouping", "summaries"],
+    "homepage": "https://github.com/asignua/filament-group-summaries",
+    "support": {
+        "issues": "https://github.com/asignua/filament-group-summaries/issues",
+        "source": "https://github.com/asignua/filament-group-summaries"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mykhailo Hladchenko",
+            "email": "myhailo@hotmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "filament/filament": "^5.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "orchestra/testbench": "^10.0|^11.0",
+        "phpunit/phpunit": "^11.5|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Asignua\\FilamentGroupSummaries\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Asignua\\FilamentGroupSummaries\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Asignua\\FilamentGroupSummaries\\GroupSummariesServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": false
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,86 @@
+/*
+ * Hand-written, no build step (resources/dist is a verbatim copy). Logical properties keep it RTL-safe;
+ * the dark variant follows Filament's `.dark` class on <html>.
+ */
+.fi-gs-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 1.25rem;
+    row-gap: 0.125rem;
+    margin-block-start: 0.125rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.fi-gs-item {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.375rem;
+}
+
+.fi-gs-column {
+    color: var(--gray-500, #6b7280);
+}
+
+.fi-gs-item .fi-ta-text-summary,
+.fi-gs-item .fi-ta-range-summary,
+.fi-gs-item .fi-ta-values-summary {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.375rem;
+    padding: 0;
+    width: auto;
+}
+
+.fi-gs-item .fi-ta-text-summary-label,
+.fi-gs-item .fi-ta-range-summary-label,
+.fi-gs-item .fi-ta-values-summary-label {
+    font-weight: 500;
+    color: var(--gray-950, #030712);
+}
+
+.fi-gs-item .fi-ta-text-summary > span:not(.fi-ta-text-summary-label),
+.fi-gs-item .fi-ta-range-summary > span:not(.fi-ta-range-summary-label) {
+    font-weight: 600;
+    color: var(--gray-950, #030712);
+}
+
+.dark .fi-gs-column {
+    color: var(--gray-400, #9ca3af);
+}
+
+.dark .fi-gs-item .fi-ta-text-summary-label,
+.dark .fi-gs-item .fi-ta-range-summary-label,
+.dark .fi-gs-item .fi-ta-values-summary-label,
+.dark .fi-gs-item .fi-ta-text-summary > span:not(.fi-ta-text-summary-label),
+.dark .fi-gs-item .fi-ta-range-summary > span:not(.fi-ta-range-summary-label) {
+    color: #fff;
+}
+
+.fi-gs-description {
+    display: block;
+}
+
+/*
+ * hideTrailingSummary(): the per-group summary rows Filament draws after each group.
+ * Filament 5 draws the page / all-records totals in the same <tbody>, after one
+ * `tr.fi-ta-summary-header-row`; the per-group rows all come BEFORE that header row. So every
+ * summary row is hidden, then the ones that follow the header row are shown again. The marker is
+ * inside a group header, so a groups-only table (no headers) is never affected. If this
+ * selector ever stops matching, the rows simply stay visible: nothing breaks.
+ */
+table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-summary-row {
+    display: none;
+}
+
+table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-summary-header-row ~ tr.fi-ta-summary-row {
+    display: table-row;
+}
+
+.fi-ta-content:has([data-fi-gs~='hide-trailing']) > table:has(> tbody > tr.fi-ta-summary-row) {
+    display: none;
+}
