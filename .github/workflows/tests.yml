@@ -25,6 +25,23 @@ jobs:
       - run: composer update --prefer-dist --no-interaction
       - run: vendor/bin/phpunit
 
+  lowest-filament:
+    # The plugin reads Filament internals (summary markup, getTableSummarySelectedState(),
+    # shouldRenderTrailingGroupedTableSummary()); keep the lower bound of `filament/filament` honest.
+    # Bump this pin together with the constraint in composer.json.
+    runs-on: ubuntu-latest
+    name: PHP 8.4 · Filament 5.9.0 (lower bound)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite, intl
+          coverage: none
+      - run: composer require "filament/filament:5.9.0" --no-interaction --no-update
+      - run: composer update --prefer-dist --no-interaction
+      - run: vendor/bin/phpunit
+
   static:
     runs-on: ubuntu-latest
     steps:
