@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/packagist/l/asignua/filament-group-summaries.svg?style=flat-square)](https://github.com/asignua/filament-group-summaries/blob/main/LICENSE.md)
 [![Plumb score](https://plumbphp.dev/badges/asignua/filament-group-summaries/composite.svg)](https://plumbphp.dev/asignua/filament-group-summaries)
 
-<img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.0/art/cover.jpg" alt="Filament Group Summaries">
+<img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-group-summaries/main/art/cover.jpg" alt="Filament Group Summaries">
 
 Show a [Filament](https://filamentphp.com) table's column summaries **in the group header row**
 (they stay visible when the group is collapsed), hide the summary row drawn after each group, and
@@ -29,14 +29,14 @@ Requested in [filamentphp/filament#19615](https://github.com/filamentphp/filamen
 
 ## Screenshots
 
-![Summaries in the group header, one group collapsed](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.0/art/group-header.jpg)
+![Summaries in the group header, one group collapsed](https://raw.githubusercontent.com/asignua/filament-group-summaries/main/art/group-header.jpg)
 
-![The same in dark mode](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.0/art/group-header-dark.jpg)
+![The same in dark mode](https://raw.githubusercontent.com/asignua/filament-group-summaries/main/art/group-header-dark.jpg)
 
 ## Requirements
 
 - PHP 8.3+
-- Filament 5. Developed and tested against **Filament 5.9** (`filament/tables` v5.9.0). The plugin relies on a few
+- Filament 5.9+ (`composer.json` requires `^5.9`). Developed and tested against **Filament 5.9** (`filament/tables` v5.9.0). The plugin relies on a few
   Filament internals (listed in [How it works](#how-it-works-and-its-trade-offs)); `tests/FilamentInternalsTest.php`
   fails with a message naming what moved if a Filament update breaks one.
 
@@ -99,9 +99,11 @@ is **not overridden**. Instead:
   come from Filament's own `getTableSummarySelectedState()` (the same grouped query Filament runs for its summary rows),
   rendered by the columns' own summarizers, so formatting, labels and custom summarizers match the footer.
   The strip is cached per query, so any number of group headers cost **one** extra aggregate query per render.
-- **Hide the trailing row.** A marker element is emitted into the header and a CSS `:has()` rule hides
-  `tbody > tr.fi-ta-summary-row` (per-group rows only: the page / all-records totals sit in the same `tbody` after the summary header row and are shown again by a sibling rule). If a Filament update changes that markup, the
-  rows simply stay visible.
+- **Hide the trailing row.** A marker element is emitted into the header and a CSS `:has()` rule hides the
+  `tr.fi-ta-summary-row` that directly follows a record row: that is always a per-group row. The page / all-records
+  totals sit in the same `tbody` but follow a summary row (or the page-summary header row on multi-page tables), so
+  they stay visible on single-page, multi-page and unpaginated tables alike. If a Filament update changes that markup,
+  the rows simply stay visible.
 - **Default direction.** The dropdown always sends `group:asc` the moment a group is picked, so a Livewire component
   hook (registered by the service provider) swaps in the group's direction when the *group* changes. A later explicit
   direction change inside the same group is respected.
@@ -112,13 +114,15 @@ Trade-offs, honestly:
   group title**, not cells aligned under their columns. Aligned cells would need a fork of Filament's table view.
 - Filament still computes its own grouped aggregate for the (hidden) trailing rows: header summaries add **one** query
   on top of Filament's one.
-- The strip sits in the group description, which is a `<p>`: summarizer HTML is flattened to inline elements (a root
-  `<div>` becomes a `<span>`, `Values` becomes a comma-separated list).
+- The strip sits in the group description, which is a `<p>`: summarizer HTML is flattened to inline elements (block
+  tags such as `<div>`, `<ul>`, `<li>` become `<span>`, `Values` becomes a comma-separated list).
 
 ## Gotchas
 
-- Summarizers with `->query(...)` modifications cannot use the grouped aggregate and run one query per group (as
-  Filament's own summary rows do).
+- Only aggregate summarizers (Sum, Average, plain Count, Range) use the shared grouped query. Summarizers that query on
+  their own run their queries **once per group header**, on top of the ones Filament runs for its trailing rows:
+  `->query(...)` modifications, `Values` (a `distinct()->pluck()`), `Count::icons()` (a pluck plus a count per value)
+  and `->using(...)` callbacks.
 - `hideTrailingSummary()` is per `SummaryGroup`, not per group value (CSS cannot tell which trailing row belongs to
   which group).
 - Tables without an Eloquent summary query (custom array data) get no header summaries.
