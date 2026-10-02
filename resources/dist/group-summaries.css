@@ -79,14 +79,20 @@
 /*
  * hideTrailingSummary(): the per-group summary rows Filament draws after each group.
  * In Filament 5 the page / all-records totals are drawn in the same <tbody>, and the page-summary
- * header row (`tr.fi-ta-summary-header-row`) only exists when the table has more than one page, so
- * it cannot be the anchor. What tells the rows apart is what precedes them: a per-group row always
- * comes right after a record row (the last record of its group), while the totals come after a
- * per-group row or after the page-summary header row. The marker is inside a group header, so a
- * groups-only table (no headers) is never affected. If this selector ever stops matching, the rows
- * simply stay visible: nothing breaks.
+ * header row (`tr.fi-ta-summary-header-row`) exists only for a length-aware paginator with more than
+ * one page and page summaries on, so it cannot be the anchor. Two things tell the rows apart:
+ * - a per-group row always comes right after a record row (the last record of its group);
+ * - a per-group row is never the last row of the <tbody>: the next group header or the totals follow it.
+ * The totals come after a per-group row or the page-summary header row, except when the last group
+ * continues on the next page: Filament then skips that group's trailing row, and with no page-summary
+ * header (page summaries off, cursor pagination) the all-records total follows a record row directly.
+ * It is then the last row, which `:not(:last-child)` keeps visible.
+ * Known limit: with `summaries(allTableCondition: false)` and no page-summary header, the very last
+ * per-group row is the last row of the <tbody> and stays visible.
+ * The marker is inside a group header, so a groups-only table (no headers) is never affected. If this
+ * selector ever stops matching, the rows simply stay visible: nothing breaks.
  */
-table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-row:not(.fi-ta-summary-row):not(.fi-ta-summary-header-row) + tr.fi-ta-summary-row {
+table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-row:not(.fi-ta-summary-row):not(.fi-ta-summary-header-row) + tr.fi-ta-summary-row:not(:last-child) {
     display: none;
 }
 

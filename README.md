@@ -99,10 +99,15 @@ is **not overridden**. Instead:
   come from Filament's own `getTableSummarySelectedState()` (the same grouped query Filament runs for its summary rows),
   rendered by the columns' own summarizers, so formatting, labels and custom summarizers match the footer.
   The strip is cached per query, so any number of group headers cost **one** extra aggregate query per render.
-- **Hide the trailing row.** A marker element is emitted into the header and a CSS `:has()` rule hides the
-  `tr.fi-ta-summary-row` that directly follows a record row: that is always a per-group row. The page / all-records
-  totals sit in the same `tbody` but follow a summary row (or the page-summary header row on multi-page tables), so
-  they stay visible on single-page, multi-page and unpaginated tables alike. If a Filament update changes that markup,
+- **Hide the trailing row.** A marker element is emitted into the header and a CSS `:has()` rule hides a
+  `tr.fi-ta-summary-row` that directly follows a record row and is not the last row of the `tbody`: that is always a
+  per-group row (the next group header or the totals follow it). The page / all-records totals sit in the same `tbody`
+  but follow a summary row or the page-summary header row; when the last group continues on the next page Filament
+  skips its trailing row, and without a page-summary header (page summaries off, cursor pagination) the all-records
+  total follows a record row, but it is then the last row and stays visible. So the totals stay visible on single-page,
+  multi-page, cursor-paginated and unpaginated tables alike. One limit: with
+  `summaries(allTableCondition: false)` on a page without a page-summary header row, the very last per-group row is the
+  last row of the `tbody` and stays visible. If a Filament update changes that markup,
   the rows simply stay visible.
 - **Default direction.** The dropdown always sends `group:asc` the moment a group is picked, so a Livewire component
   hook (registered by the service provider) swaps in the group's direction when the *group* changes. A later explicit

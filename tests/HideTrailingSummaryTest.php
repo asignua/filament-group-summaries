@@ -8,6 +8,7 @@ use Asignua\FilamentGroupSummaries\SummaryGroup;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Livewire\Livewire;
 use Symfony\Component\CssSelector\CssSelectorConverter;
@@ -98,6 +99,79 @@ class HideTrailingSummaryTest extends TestCase
 
         // Page 1: open (3) + paid (2) -> 2 per-group rows, then the page total and the all-records total.
         $this->assertCount(4, $rows);
+        $this->assertSame(array_slice($rows, 0, 2), $hidden);
+    }
+
+    /**
+     * Page size 4 splits the `paid` group across pages, so Filament omits the trailing per-group row
+     * on page 1 and the totals follow a record row (or the page-summary header row) directly.
+     */
+    private function splitGroupTable(Table $table, SummaryGroup $group): Table
+    {
+        return $table
+            ->defaultGroup($group->hideTrailingSummary())
+            ->paginated([4])
+            ->defaultPaginationPageOption(4);
+    }
+
+    public function test_group_split_across_pages_keeps_page_and_all_records_totals(): void
+    {
+        $this->seedOrders();
+        OrdersTable::$configure = fn (Table $table, SummaryGroup $group): Table => $this->splitGroupTable($table, $group);
+
+        $html = Livewire::test(OrdersTable::class)->html();
+        $this->assertStringContainsString('fi-ta-summary-header-row', $html);
+
+        ['rows' => $rows, 'hidden' => $hidden] = $this->summaryRows($html);
+
+        // Page 1: open (3) + paid (1 of 2) -> one per-group row (open), then the page total and the all-records total.
+        $this->assertCount(3, $rows);
+        $this->assertSame([$rows[0]], $hidden);
+    }
+
+    public function test_group_split_across_pages_without_page_summary_keeps_all_records_total(): void
+    {
+        $this->seedOrders();
+        OrdersTable::$configure = fn (Table $table, SummaryGroup $group): Table => $this->splitGroupTable($table, $group)
+            ->summaries(pageCondition: false);
+
+        $html = Livewire::test(OrdersTable::class)->html();
+        $this->assertStringNotContainsString('fi-ta-summary-header-row', $html);
+
+        ['rows' => $rows, 'hidden' => $hidden] = $this->summaryRows($html);
+
+        // Page 1: one per-group row (open), then the all-records total right after the last `paid` record.
+        $this->assertCount(2, $rows);
+        $this->assertSame([$rows[0]], $hidden);
+    }
+
+    public function test_group_split_across_cursor_pages_keeps_all_records_total(): void
+    {
+        $this->seedOrders();
+        OrdersTable::$configure = fn (Table $table, SummaryGroup $group): Table => $this->splitGroupTable($table, $group)
+            ->paginationMode(PaginationMode::Cursor);
+
+        $html = Livewire::test(OrdersTable::class)->html();
+        $this->assertStringNotContainsString('fi-ta-summary-header-row', $html);
+
+        ['rows' => $rows, 'hidden' => $hidden] = $this->summaryRows($html);
+
+        // Cursor pagination never renders a page summary: one per-group row (open), then the all-records total.
+        $this->assertCount(2, $rows);
+        $this->assertSame([$rows[0]], $hidden);
+    }
+
+    public function test_without_any_totals_only_the_last_per_group_row_stays_visible(): void
+    {
+        $this->seedOrders();
+        OrdersTable::$configure = fn (Table $table, SummaryGroup $group): Table => $table
+            ->defaultGroup($group->hideTrailingSummary())
+            ->summaries(pageCondition: false, allTableCondition: false);
+
+        ['rows' => $rows, 'hidden' => $hidden] = $this->summaryRows(Livewire::test(OrdersTable::class)->html());
+
+        // Documented limit: the last per-group row is the last row of the <tbody>, indistinguishable from a total.
+        $this->assertCount(3, $rows);
         $this->assertSame(array_slice($rows, 0, 2), $hidden);
     }
 }
