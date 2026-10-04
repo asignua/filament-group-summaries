@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/packagist/l/asignua/filament-group-summaries.svg?style=flat-square)](https://github.com/asignua/filament-group-summaries/blob/main/LICENSE.md)
 [![Plumb score](https://plumbphp.dev/badges/asignua/filament-group-summaries/composite.svg)](https://plumbphp.dev/asignua/filament-group-summaries)
 
-<img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-group-summaries/main/art/cover.jpg" alt="Filament Group Summaries">
+<img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.0/art/cover.jpg" alt="Filament Group Summaries">
 
 Show a [Filament](https://filamentphp.com) table's column summaries **in the group header row**
 (they stay visible when the group is collapsed), hide the summary row drawn after each group, and
@@ -29,9 +29,9 @@ Requested in [filamentphp/filament#19615](https://github.com/filamentphp/filamen
 
 ## Screenshots
 
-![Summaries in the group header, one group collapsed](https://raw.githubusercontent.com/asignua/filament-group-summaries/main/art/group-header.jpg)
+![Summaries in the group header, one group collapsed](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.0/art/group-header.jpg)
 
-![The same in dark mode](https://raw.githubusercontent.com/asignua/filament-group-summaries/main/art/group-header-dark.jpg)
+![The same in dark mode](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.0/art/group-header-dark.jpg)
 
 ## Requirements
 
