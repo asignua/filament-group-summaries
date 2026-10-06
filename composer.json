@@ -1,6 +1,6 @@
 {
     "name": "asignua/filament-group-summaries",
-    "description": "Column summaries in the group header row of Filament tables, a default direction per group, and per-group control of the trailing summary row.",
+    "description": "Column summaries (Sum, Average, Count, Range, Values or custom) printed in the group header row of Filament 5 tables, so they stay visible when the group is collapsed and respect filters and search; per-group control of the summary row Filament draws after each group; and a default sort direction per group. SummaryGroup extends Filament's Group, so it is a drop-in replacement; no Filament view is forked.",
     "keywords": ["filament", "filament-plugin", "laravel", "table", "grouping", "summaries"],
     "homepage": "https://github.com/asignua/filament-group-summaries",
     "support": {
