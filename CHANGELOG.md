@@ -2,7 +2,7 @@
 
 All notable changes to `asignua/filament-group-summaries` are documented here.
 
-## Unreleased
+## v1.0.1 - 2026-10-08
 
 - Header summarizers render through `toHtml()` (like the footer), so a custom `->view()` and published view overrides show in the group header; `Values` with a custom view is no longer flattened.
 - `<pre>`, `<blockquote>`, `<figure>`, `<nav>` and the other tags that implicitly close a `<p>` are flattened to `<span>` in the header strip; `<hr>` is dropped.
