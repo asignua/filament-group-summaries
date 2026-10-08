@@ -120,7 +120,7 @@ Trade-offs, honestly:
 - Filament still computes its own grouped aggregate for the (hidden) trailing rows: header summaries add **one** query
   on top of Filament's one.
 - The strip sits in the group description, which is a `<p>`: summarizer HTML is flattened to inline elements (block
-  tags such as `<div>`, `<ul>`, `<li>` become `<span>`, `Values` becomes a comma-separated list).
+  tags such as `<div>`, `<ul>`, `<li>` become `<span>`, `Values` without a custom `->view()` becomes a comma-separated list; summarizers are rendered with `toHtml()`, so a custom `->view()` shows in the header as in the footer).
 
 ## Gotchas
 
@@ -131,7 +131,10 @@ Trade-offs, honestly:
 - `hideTrailingSummary()` is per `SummaryGroup`, not per group value (CSS cannot tell which trailing row belongs to
   which group).
 - Tables without an Eloquent summary query (custom array data) get no header summaries.
-- Without the panel plugin the data is right but unstyled.
+- `hideTrailingSummary()` is CSS only. Without the stylesheet the header strip is unstyled **and** `hideTrailingSummary()`
+  has no effect. `GroupSummariesPlugin` links it in a panel; outside a panel (a standalone Livewire table, or a panel
+  without the plugin) add it to the layout yourself:
+  `<link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('filament-group-summaries', 'asignua/filament-group-summaries') }}">`.
 
 ## AI agents
 

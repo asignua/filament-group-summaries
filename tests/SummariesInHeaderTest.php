@@ -7,6 +7,7 @@ namespace Asignua\FilamentGroupSummaries\Tests;
 use Asignua\FilamentGroupSummaries\SummaryGroup;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\Summarizers\Count;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\Summarizers\Values;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -199,6 +200,44 @@ class SummariesInHeaderTest extends TestCase
         foreach (['<div', '<ul', '<li', '</div>', '</ul>', '</li>'] as $tag) {
             $this->assertStringNotContainsString($tag, $raw);
         }
+    }
+
+    public function test_custom_view_summarizer_renders_its_view_flattened_in_the_header(): void
+    {
+        $this->seedOrders();
+        OrdersTable::$configure = fn (Table $table, SummaryGroup $group): Table => $table
+            ->columns([
+                TextColumn::make('reference'),
+                TextColumn::make('status'),
+                TextColumn::make('amount')->summarize(Sum::make()->label('Total')->view('workbench::custom-summary')),
+            ])
+            ->defaultGroup($group->summariesInHeader());
+
+        $raw = $this->headerOf(Livewire::test(OrdersTable::class)->html(), 'paid', raw: true);
+
+        $this->assertStringContainsString('CUSTOM-VIEW', $raw);
+        $this->assertStringContainsString('custom-summary', $raw);
+
+        foreach (['<div', '<pre', '<blockquote', '<figure', '<hr', '</pre>'] as $tag) {
+            $this->assertStringNotContainsString($tag, $raw);
+        }
+    }
+
+    public function test_values_summarizer_with_a_custom_view_is_not_flattened_into_a_list(): void
+    {
+        $this->seedOrders();
+        OrdersTable::$configure = fn (Table $table, SummaryGroup $group): Table => $table
+            ->columns([
+                TextColumn::make('reference'),
+                TextColumn::make('status'),
+                TextColumn::make('amount')->summarize(Values::make()->label('Vals')->view('workbench::custom-summary')),
+            ])
+            ->defaultGroup($group->summariesInHeader());
+
+        $raw = $this->headerOf(Livewire::test(OrdersTable::class)->html(), 'paid', raw: true);
+
+        $this->assertStringContainsString('CUSTOM-VIEW', $raw);
+        $this->assertStringNotContainsString('fi-ta-values-summary', $raw);
     }
 
     public function test_plain_group_and_summary_off_leave_the_header_untouched(): void

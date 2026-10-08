@@ -27,8 +27,9 @@ use Illuminate\Support\HtmlString;
  */
 class SummaryGroup extends Group
 {
-    /** Tags that may not sit inside a `<p>` and are turned into `<span>` in summarizer HTML. */
-    private const BLOCK_TAGS = 'div|ul|ol|li|p|dl|dt|dd|table|thead|tbody|tfoot|tr|td|th|section|header|footer|h[1-6]';
+    /** Tags whose start tag closes an open `<p>` and that are turned into `<span>` in summarizer HTML (`<hr>` is void and stripped separately). */
+    private const BLOCK_TAGS = 'div|ul|ol|li|p|dl|dt|dd|table|thead|tbody|tfoot|tr|td|th|section|header|footer|h[1-6]'
+        .'|address|article|aside|blockquote|details|dialog|fieldset|figcaption|figure|form|hgroup|main|menu|nav|pre|search|summary';
 
     protected bool|Closure $summariesInHeader = false;
 
@@ -194,7 +195,7 @@ class SummaryGroup extends Group
      */
     private function renderSummarizer(Summarizer $summarizer): string
     {
-        if ($summarizer instanceof Values) {
+        if ($summarizer instanceof Values && !$summarizer->hasView()) {
             $state = $summarizer->getState();
 
             $values = array_map(
@@ -212,7 +213,10 @@ class SummaryGroup extends Group
             return '<span '.$attributes.'>'.$label.'<span>'.implode(', ', $values).'</span></span>';
         }
 
-        $html = trim((string) preg_replace('/\s+/', ' ', $summarizer->toEmbeddedHtml()));
+        // toHtml(), not toEmbeddedHtml(): the footer renders `{{ $summarizer }}`, so a custom ->view()
+        // and a published embedded-view override must show in the header too.
+        $html = trim((string) preg_replace('/\s+/', ' ', $summarizer->toHtml()));
+        $html = (string) preg_replace('/<hr\b[^>]*>/i', ' ', $html);
 
         return (string) preg_replace('/<(\/?)(?:'.self::BLOCK_TAGS.')\b/i', '<$1span', $html);
     }
