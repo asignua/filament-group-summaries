@@ -2,6 +2,11 @@
 
 All notable changes to `asignua/filament-group-summaries` are documented here.
 
+## v1.0.2 - 2026-10-25
+
+- Screenshots and the cover carry the «made in asign» mark; README shows the Stand With Ukraine badge.
+- Dependency updates (CI actions, dev tooling).
+
 ## v1.0.1 - 2026-10-08
 
 - Header summarizers render through `toHtml()` (like the footer), so a custom `->view()` and published view overrides show in the group header; `Values` with a custom view is no longer flattened.
