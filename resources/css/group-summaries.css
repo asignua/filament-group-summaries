@@ -211,7 +211,8 @@ table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-row:not(.fi-ta-summa
  * color(): .fi-gs-color is an empty element inside the header that paints the tint over the header cell
  * (table layout) or the header block (grid / stacked layout). It is
  * the only place the colour variables can live, because they must sit on the element that uses them.
- * Extending past the cell into the clipping table wrapper covers the selection cell too.
+ * It extends only to the START side, past the cell into the clipping table wrapper, to cover the selection cell
+ * too: overflow on the start side is clipped, while on the end side it would make the wrapper scroll.
  * The tint comes from the colour's own shades (500 in light mode, 400 in dark).
  */
 .fi-ta-group-header-cell:has(.fi-gs-color),
@@ -224,7 +225,7 @@ table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-row:not(.fi-ta-summa
     position: absolute;
     z-index: -1;
     inset-block: 0;
-    inset-inline: -100vw -100vw;
+    inset-inline: -100vw 0;
     pointer-events: none;
     background-color: color-mix(in oklab, var(--color-500) 12%, transparent);
 }

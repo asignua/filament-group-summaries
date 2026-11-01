@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($rows as $i => [$status, $reference, $amount, $quantity]) {
-            Order::create(['reference' => $reference, 'status' => $status, 'amount' => $amount, 'quantity' => $quantity]);
+            Order::query()->updateOrCreate(['reference' => $reference], ['status' => $status, 'amount' => $amount, 'quantity' => $quantity]);
         }
     }
 }

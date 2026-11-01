@@ -132,24 +132,47 @@ class SummaryGroup extends Group
     /**
      * @param array<string, mixed>|Model $record
      *
-     * @return array<int, string>|string|null
+     * @return array<int|string, string>|string|null
      */
     public function getColor(Model|array $record, string|Htmlable|null $title): string|array|null
     {
-        $key = $this->getStringKey($record);
-        $titleText = $title instanceof Htmlable ? $title->toHtml() : $title;
+        if (is_array($this->color) && !self::isShadeMap($this->color)) {
+            $key = $this->getStringKey($record);
+            $titleText = $title instanceof Htmlable ? $title->toHtml() : $title;
 
-        if (is_array($this->color)) {
-            return $this->color[$key ?? ''] ?? $this->color[(string) $titleText] ?? null;
+            return self::validColor($this->color[$key ?? ''] ?? $this->color[(string) $titleText] ?? null);
         }
 
         $color = $this->evaluate(
             $this->color,
-            namedInjections: ['record' => $record, 'title' => $title, 'key' => $key, 'state' => $this->getKey($record)],
+            namedInjections: ['record' => $record, 'title' => $title, 'key' => $this->getStringKey($record), 'state' => $this->getKey($record)],
             typedInjections: ($record instanceof Model) ? [Model::class => $record, $record::class => $record] : [],
         );
 
-        return (is_string($color) && $color !== '') || is_array($color) ? $color : null;
+        return self::validColor($color);
+    }
+
+    /**
+     * A colour is a non-empty name or a shade map (`Color::Purple`); a map without the 400 and 500 shades
+     * the tint uses is ignored rather than failing the whole table.
+     *
+     * @return array<int|string, string>|string|null
+     */
+    private static function validColor(mixed $color): string|array|null
+    {
+        if (is_string($color) && $color !== '') {
+            return $color;
+        }
+
+        return is_array($color) && self::isShadeMap($color) ? $color : null;
+    }
+
+    /**
+     * @param array<int|string, mixed> $color
+     */
+    private static function isShadeMap(array $color): bool
+    {
+        return isset($color[400], $color[500]);
     }
 
     public function hasSummariesInHeader(): bool
@@ -235,7 +258,6 @@ class SummaryGroup extends Group
             return '';
         }
 
-        // A closure may return a custom shade map; get_color_css_variables() validates it itself.
         /** @var array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}|string $color */
         $variables = get_color_css_variables($color, shades: [400, 500]);
 

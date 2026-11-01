@@ -18,7 +18,7 @@ use Filament\Tables\Table;
 use Workbench\App\Models\Order;
 
 /**
- * Hand-testing page: /admin/orders?mode=top|both|color|header (default: top + color).
+ * Hand-testing page: /admin/orders?mode=top|both|color|header&hide=first|last (default: top + color).
  */
 class Orders extends Page implements HasTable
 {
@@ -43,7 +43,7 @@ class Orders extends Page implements HasTable
         }
 
         if ($mode !== 'header') {
-            $group->color(fn (string $key): ?string => match ($key) {
+            $group->color(fn (?string $key): ?string => match ($key) {
                 'paid' => 'success',
                 'open' => 'warning',
                 'void' => 'danger',
@@ -55,9 +55,9 @@ class Orders extends Page implements HasTable
         return $table
             ->query(Order::query())
             ->columns([
-                TextColumn::make('reference'),
+                TextColumn::make('reference')->visibleFrom(request('hide') === 'first' ? 'xl' : null),
                 TextColumn::make('amount')->numeric()->alignEnd()->summarize([Sum::make()->label('Total'), Average::make()->label('Avg')]),
-                TextColumn::make('quantity')->alignEnd()->summarize(Count::make()->label('Orders')),
+                TextColumn::make('quantity')->alignEnd()->visibleFrom(request('hide') === 'last' ? 'xl' : null)->summarize(Count::make()->label('Orders')),
             ])
             ->groups([$group])
             ->defaultGroup($group)

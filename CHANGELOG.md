@@ -7,6 +7,8 @@ All notable changes to `asignua/filament-group-summaries` are documented here.
 - `SummaryGroup::position(SummaryPosition|Closure)`: `Bottom` (default, unchanged), `Top` (summary row under the group header, aligned under the table columns; the row after the records is hidden) or `Both`. Requested in filamentphp/filament#19615 (and #20227 for the table-level summary).
 - `SummaryGroup::color(string|array|Closure|null)`: tints the group header with a Filament colour, by name, by group key / title map, or per group with a closure; light and dark mode (cf. filamentphp/filament#20228).
 - New Alpine component `group-summaries-top` (loaded on demand) for the aligned row.
+- `color()` also takes a shade map (`Color::Purple`, or a closure returning one); a map without the 400/500 shades is ignored instead of failing. The tint no longer widens the table wrapper (no sideways scroll).
+- The top row hides the cell of a responsively hidden column and aligns every group in a table with one observer pair.
 - Workbench: demo page `/admin/orders` and a seeder; art for the new options.
 
 ## v1.0.2 - 2026-10-25

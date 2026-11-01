@@ -101,22 +101,24 @@ SummaryGroup::make('status')->position(SummaryPosition::Top);   // or ::Both to 
 ```
 
 The row sits in the group header (so it stays visible when the group is collapsed) and a small Alpine component lines
-its cells up under the table's header cells. In a grid layout, on a narrow screen, or if a header cell is missing, the cells
-wrap as a strip instead. With `Top` or `Both`, `summariesInHeader()` is not needed (the top row replaces the strip).
+its cells up under the table's header cells. On a narrow screen, or if a header cell is missing, the cells
+wrap as a strip instead; a column hidden responsively (`visibleFrom()`) is hidden in the row too. Only the table layout is supported: in a
+grid / `Stack` / `Split` layout the top row (like `summariesInHeader()`) does not render. With `Top` or `Both`, `summariesInHeader()` is not needed (the top row replaces the strip).
 
 ### Header colour
 
 ```php
 SummaryGroup::make('status')->color('success');                       // any colour registered with FilamentColor
 SummaryGroup::make('status')->color(['paid' => 'success', 'void' => 'danger']);   // by group key (or title)
-SummaryGroup::make('status')->color(fn (string $key, $record, $title, $state): ?string => match ($key) {
+SummaryGroup::make('status')->color(fn (?string $key, $record, $title, $state): ?string => match ($key) {
     'paid' => 'success',
     'open' => 'warning',
     default => null,       // neutral header
 });
 ```
 
-The tint uses the colour's own CSS variables, so custom colours and light/dark mode work. It is painted by an empty
+A shade map such as `Color::Purple` works too, and so does a closure returning one (a map without the 400 and 500
+shades is ignored). The group key is `null` for a NULL value, so type it `?string`. The tint uses the colour's own CSS variables, so custom colours and light/dark mode work. It is painted by an empty
 element inside the header (the header cell itself belongs to Filament's view), so the stylesheet is required.
 
 For the table's default group use `makeDefaultOn()`; plain `->defaultGroup($group)` keeps

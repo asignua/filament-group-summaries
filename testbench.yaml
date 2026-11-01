@@ -1,5 +1,5 @@
 # Try the group summaries by hand:  vendor/bin/testbench workbench:build   then   vendor/bin/testbench serve --host=0.0.0.0
-# Log in at /admin as emma@example.com / password (demo rows: vendor/bin/testbench db:seed; the page is /admin/orders, ?mode=top|both|color|header).
+# Log in at /admin as emma@example.com / password (demo rows: vendor/bin/testbench db:seed --class='Workbench\Database\Seeders\DatabaseSeeder'; the page is /admin/orders, ?mode=top|both|color|header).
 providers:
   - Filament\Actions\ActionsServiceProvider
   - BladeUI\Heroicons\BladeHeroiconsServiceProvider

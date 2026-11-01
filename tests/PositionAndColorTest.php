@@ -6,6 +6,7 @@ namespace Asignua\FilamentGroupSummaries\Tests;
 
 use Asignua\FilamentGroupSummaries\SummaryGroup;
 use Asignua\FilamentGroupSummaries\SummaryPosition;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Table;
 use Livewire\Livewire;
 use Workbench\App\OrdersTable;
@@ -138,5 +139,48 @@ class PositionAndColorTest extends TestCase
     public function test_default_color_is_neutral(): void
     {
         $this->assertNull(SummaryGroup::make('status')->getColor([], 'x'));
+    }
+
+    public function test_a_shade_map_is_a_colour_not_a_key_map(): void
+    {
+        $group = SummaryGroup::make('status')->color(Color::Purple);
+
+        $this->assertSame(Color::Purple, $group->getColor(['status' => 'paid'], 'paid'));
+
+        $this->seedOrders();
+        $this->configure(fn (SummaryGroup $group) => $group->color(Color::Purple));
+
+        $this->assertSame(3, substr_count(Livewire::test(OrdersTable::class)->html(), 'class="fi-gs-color" aria-hidden'));
+    }
+
+    public function test_a_partial_shade_map_from_a_closure_is_ignored(): void
+    {
+        $this->seedOrders();
+        $this->configure(fn (SummaryGroup $group) => $group->color(fn (): array => ['500' => '#f00']));
+
+        $html = Livewire::test(OrdersTable::class)->html();
+
+        $this->assertStringNotContainsString('fi-gs-color', $html);
+    }
+
+    public function test_a_closure_may_return_a_full_shade_map(): void
+    {
+        $group = SummaryGroup::make('status')->color(fn (): array => Color::Purple);
+
+        $this->assertSame(Color::Purple, $group->getColor(['status' => 'paid'], 'paid'));
+    }
+
+    public function test_the_key_is_null_for_a_null_group_value(): void
+    {
+        $seen = [];
+        $group = SummaryGroup::make('status')->color(function (?string $key) use (&$seen): ?string {
+            $seen[] = $key;
+
+            return null;
+        });
+
+        $group->getColor(['status' => null], null);
+
+        $this->assertSame([null], $seen);
     }
 }
