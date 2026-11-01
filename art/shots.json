@@ -1,0 +1,22 @@
+{
+    "base": "http://host.docker.internal:8751",
+    "login": {
+        "path": "/admin/login",
+        "email": "emma@example.com",
+        "password": "password"
+    },
+    "shots": [
+        {
+            "path": "/admin/orders?mode=top",
+            "out": "group-top.jpg",
+            "waitFor": ".fi-gs-aligned .fi-gs-align-end",
+            "viewport": {"width": 1440, "height": 900}
+        },
+        {
+            "path": "/admin/orders?mode=top",
+            "out": "group-top-dark.jpg",
+            "theme": "dark",
+            "waitFor": ".fi-gs-aligned .fi-gs-align-end"
+        }
+    ]
+}

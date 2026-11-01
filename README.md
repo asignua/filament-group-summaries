@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/packagist/l/asignua/filament-group-summaries.svg?style=flat-square)](https://github.com/asignua/filament-group-summaries/blob/main/LICENSE.md)
 [![Plumb score](https://plumbphp.dev/badges/asignua/filament-group-summaries/composite.svg)](https://plumbphp.dev/asignua/filament-group-summaries)
 
-<img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.2/art/cover.jpg" alt="Filament Group Summaries">
+<img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.1.0/art/cover.jpg" alt="Filament Group Summaries">
 
 Show a [Filament](https://filamentphp.com) table's column summaries **in the group header row**
 (they stay visible when the group is collapsed), hide the summary row drawn after each group, and
@@ -29,9 +29,13 @@ Requested in [filamentphp/filament#19615](https://github.com/filamentphp/filamen
 
 ## Screenshots
 
-![Summaries in the group header, one group collapsed](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.2/art/group-header.jpg)
+![Summaries in the group header, one group collapsed](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.1.0/art/group-header.jpg)
 
-![The same in dark mode](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.0.2/art/group-header-dark.jpg)
+![The same in dark mode](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.1.0/art/group-header-dark.jpg)
+
+![Coloured group headers with the summary row at the top, aligned under the columns](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.1.0/art/group-top.jpg)
+
+![The same in dark mode](https://raw.githubusercontent.com/asignua/filament-group-summaries/v1.1.0/art/group-top-dark.jpg)
 
 ## Requirements
 
@@ -83,8 +87,37 @@ $table
 | `summaryColumns(?array $names)` | Limits the header to these columns (default: every visible column with a summarizer). |
 | `columnLabels(bool = true)` | Show or hide the column name before its summaries. |
 | `hideTrailingSummary(bool\|Closure = true)` | Hides the per-group summary rows after the groups (the page / all-records totals in the footer stay). |
+| `position(SummaryPosition\|Closure)` | `Bottom` (default, Filament's own), `Top` (a summary row right under the group header, aligned under the columns; the row after the records is hidden) or `Both`. |
+| `color(string\|array\|Closure\|null)` | Tints the group header with a Filament colour (see below). |
 | `defaultDirection('asc'\|'desc')` | Direction applied when the user picks this group in the grouping dropdown. |
 | `makeDefaultOn(Table $table)` | `defaultGroup()` that uses the group's own direction. |
+
+### Summary row at the top of the group
+
+```php
+use Asignua\FilamentGroupSummaries\SummaryPosition;
+
+SummaryGroup::make('status')->position(SummaryPosition::Top);   // or ::Both to keep the row after the records too
+```
+
+The row sits in the group header (so it stays visible when the group is collapsed) and a small Alpine component lines
+its cells up under the table's header cells. In a grid layout, on a narrow screen, or if a header cell is missing, the cells
+wrap as a strip instead. With `Top` or `Both`, `summariesInHeader()` is not needed (the top row replaces the strip).
+
+### Header colour
+
+```php
+SummaryGroup::make('status')->color('success');                       // any colour registered with FilamentColor
+SummaryGroup::make('status')->color(['paid' => 'success', 'void' => 'danger']);   // by group key (or title)
+SummaryGroup::make('status')->color(fn (string $key, $record, $title, $state): ?string => match ($key) {
+    'paid' => 'success',
+    'open' => 'warning',
+    default => null,       // neutral header
+});
+```
+
+The tint uses the colour's own CSS variables, so custom colours and light/dark mode work. It is painted by an empty
+element inside the header (the header cell itself belongs to Filament's view), so the stylesheet is required.
 
 For the table's default group use `makeDefaultOn()`; plain `->defaultGroup($group)` keeps
 `Table::defaultGroup()`'s own direction argument (`'asc'`).
