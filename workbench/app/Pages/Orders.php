@@ -15,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Livewire\Attributes\Url;
 use Workbench\App\Models\Order;
 
 /**
@@ -28,9 +29,16 @@ class Orders extends Page implements HasTable
 
     protected static ?string $slug = 'orders';
 
+    // #[Url]: plain request() reads are lost on Livewire update requests (the mode reset after one click).
+    #[Url]
+    public string $mode = 'top';
+
+    #[Url]
+    public ?string $hide = null;
+
     public function table(Table $table): Table
     {
-        $mode = request('mode', 'top');
+        $mode = $this->mode;
 
         $group = SummaryGroup::make('status')->collapsible();
 
@@ -55,9 +63,9 @@ class Orders extends Page implements HasTable
         return $table
             ->query(Order::query())
             ->columns([
-                TextColumn::make('reference')->visibleFrom(request('hide') === 'first' ? 'xl' : null),
+                TextColumn::make('reference')->visibleFrom($this->hide === 'first' ? 'xl' : null),
                 TextColumn::make('amount')->numeric()->alignEnd()->summarize([Sum::make()->label('Total'), Average::make()->label('Avg')]),
-                TextColumn::make('quantity')->alignEnd()->visibleFrom(request('hide') === 'last' ? 'xl' : null)->summarize(Count::make()->label('Orders')),
+                TextColumn::make('quantity')->alignEnd()->visibleFrom($this->hide === 'last' ? 'xl' : null)->summarize(Count::make()->label('Orders')),
             ])
             ->groups([$group])
             ->defaultGroup($group)

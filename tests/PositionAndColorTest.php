@@ -141,6 +141,14 @@ class PositionAndColorTest extends TestCase
         $this->assertNull(SummaryGroup::make('status')->getColor([], 'x'));
     }
 
+    public function test_a_key_map_with_numeric_keys_is_not_taken_for_a_shade_map(): void
+    {
+        $group = SummaryGroup::make('status')->color(['400' => 'warning', '500' => 'danger']);
+
+        $this->assertSame('danger', $group->getColor(['status' => '500'], '500'));
+        $this->assertSame('warning', $group->getColor(['status' => '400'], '400'));
+    }
+
     public function test_a_shade_map_is_a_colour_not_a_key_map(): void
     {
         $group = SummaryGroup::make('status')->color(Color::Purple);

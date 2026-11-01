@@ -172,7 +172,17 @@ class SummaryGroup extends Group
      */
     private static function isShadeMap(array $color): bool
     {
-        return isset($color[400], $color[500]);
+        // A key map may legitimately use 400/500 as group keys (HTTP statuses: ['400' => 'warning']),
+        // so the shades must also LOOK like colour values, not Filament colour names.
+        return isset($color[400], $color[500])
+            && self::isColorValue($color[400])
+            && self::isColorValue($color[500]);
+    }
+
+    private static function isColorValue(mixed $value): bool
+    {
+        return is_string($value)
+            && (str_starts_with($value, '#') || str_contains($value, '(') || preg_match('/^\d+\s*,\s*\d+\s*,\s*\d+$/', $value) === 1);
     }
 
     public function hasSummariesInHeader(): bool
