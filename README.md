@@ -149,3 +149,12 @@ vendor/bin/phpunit
 
 See the [CHANGELOG](https://github.com/asignua/filament-group-summaries/blob/main/CHANGELOG.md) and the
 [LICENSE](https://github.com/asignua/filament-group-summaries/blob/main/LICENSE.md).
+
+## More plugins by asign
+
+- [XLSX Export](https://filamentphp.com/plugins/asign-xlsx-export) — spreadsheet exports for tables
+- [Row Layout](https://filamentphp.com/plugins/asign-row-layout) — column manager for tables
+- [Infinite Scroll](https://filamentphp.com/plugins/asign-infinite-scroll) — endless tables and lists
+- [Themes](https://filamentphp.com/plugins/asign-themes) — per-user and per-panel colour themes
+
+All plugins: <https://filamentphp.com/plugins?q=asign>
