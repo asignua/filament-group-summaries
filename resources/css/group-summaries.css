@@ -102,6 +102,145 @@ table:has([data-fi-gs~='hide-trailing']) > tbody > tr.fi-ta-row:not(.fi-ta-summa
 }
 
 /* hideTrailingSummary() with no description and no header summaries: the marker alone must not leave an empty paragraph. */
-.fi-ta-group-description:has(> [data-fi-gs]:only-child) {
+.fi-ta-group-description:has(> [data-fi-gs]:only-child):not(:has(> .fi-gs-color)) {
     display: none;
+}
+
+/*
+ * position(Top | Both): the summary row under the group header. One cell per visible column; the Alpine
+ * component sets the cell widths from the table's header cells and adds .fi-gs-aligned. Without it
+ * (grid layout, narrow screen) the cells wrap as a strip and empty ones are dropped.
+ */
+.fi-gs-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 1.25rem;
+    margin-block-start: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.fi-gs-top-cell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.375rem;
+}
+
+.fi-gs-top-cell:not(:has(*)) {
+    display: none;
+}
+
+.fi-gs-top-cell .fi-ta-text-summary,
+.fi-gs-top-cell .fi-ta-range-summary,
+.fi-gs-top-cell .fi-ta-values-summary,
+.fi-gs-top-cell .fi-ta-icon-count-summary,
+.fi-gs-top-cell .fi-ta-icon-count-summary > span,
+.fi-gs-top-cell .fi-ta-icon-count-summary > span > span {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.375rem;
+    padding: 0;
+    width: auto;
+}
+
+.fi-gs-top-cell .fi-ta-icon-count-summary svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    align-self: center;
+}
+
+.fi-gs-top-cell .fi-ta-text-summary-label,
+.fi-gs-top-cell .fi-ta-range-summary-label,
+.fi-gs-top-cell .fi-ta-values-summary-label,
+.fi-gs-top-cell .fi-ta-icon-count-summary-label {
+    font-weight: 500;
+    color: var(--gray-950, #030712);
+}
+
+.fi-gs-top-cell .fi-ta-text-summary > span:not(.fi-ta-text-summary-label),
+.fi-gs-top-cell .fi-ta-range-summary > span:not(.fi-ta-range-summary-label) {
+    font-weight: 600;
+    color: var(--gray-950, #030712);
+}
+
+.dark .fi-gs-top-cell .fi-ta-text-summary-label,
+.dark .fi-gs-top-cell .fi-ta-range-summary-label,
+.dark .fi-gs-top-cell .fi-ta-values-summary-label,
+.dark .fi-gs-top-cell .fi-ta-icon-count-summary-label,
+.dark .fi-gs-top-cell .fi-ta-text-summary > span:not(.fi-ta-text-summary-label),
+.dark .fi-gs-top-cell .fi-ta-range-summary > span:not(.fi-ta-range-summary-label) {
+    color: #fff;
+}
+
+.fi-gs-top.fi-gs-aligned {
+    flex-wrap: nowrap;
+    column-gap: 0;
+    /* Zero width: the cells overflow it, so the row never widens the table it is measured against. */
+    width: 0;
+    white-space: nowrap;
+}
+
+.fi-gs-top.fi-gs-aligned .fi-gs-top-cell {
+    display: flex;
+    flex: none;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+    padding-block: 0;
+}
+
+/* The column name is already in the table header right above; the cell keeps only the value. */
+.fi-gs-top.fi-gs-aligned .fi-gs-column {
+    display: none;
+}
+
+.fi-gs-top.fi-gs-aligned .fi-gs-align-end {
+    justify-content: flex-end;
+    text-align: end;
+}
+
+.fi-gs-top.fi-gs-aligned .fi-gs-align-center {
+    justify-content: center;
+    text-align: center;
+}
+
+/*
+ * color(): .fi-gs-color is an empty element inside the header that paints the tint over the header cell
+ * (table layout) or the header block (grid / stacked layout). It is
+ * the only place the colour variables can live, because they must sit on the element that uses them.
+ * Extending past the cell into the clipping table wrapper covers the selection cell too.
+ * The tint comes from the colour's own shades (500 in light mode, 400 in dark).
+ */
+.fi-ta-group-header-cell:has(.fi-gs-color),
+.fi-ta-group-header:has(.fi-gs-color):not(.fi-ta-group-header-cell .fi-ta-group-header) {
+    position: relative;
+    isolation: isolate;
+}
+
+.fi-gs-color {
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    inset-inline: -100vw -100vw;
+    pointer-events: none;
+    background-color: color-mix(in oklab, var(--color-500) 12%, transparent);
+}
+
+.dark .fi-gs-color {
+    background-color: color-mix(in oklab, var(--color-400) 16%, transparent);
+}
+
+/* Grid / stacked layout: the header block is the card, so the tint stays inside it. */
+.fi-ta-group-header:not(.fi-ta-group-header-cell .fi-ta-group-header) > div > .fi-ta-group-description > .fi-gs-color {
+    inset-inline: 0;
+}
+
+/* The marker alone must not make the description paragraph take space. */
+.fi-ta-group-description:has(> .fi-gs-color:only-child) {
+    margin: 0;
+    padding: 0;
+    height: 0;
 }

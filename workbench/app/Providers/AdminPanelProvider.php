@@ -16,10 +16,17 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\View;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Workbench\App\Pages\Orders;
 
 class AdminPanelProvider extends PanelProvider
 {
+    public function boot(): void
+    {
+        View::addNamespace('workbench', __DIR__.'/../../resources/views');
+    }
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -28,6 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->plugin(GroupSummariesPlugin::make())
+            ->pages([Orders::class])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Asignua\FilamentGroupSummaries;
 
+use Filament\Support\Assets\AlpineComponent;
 use Filament\Support\Assets\Css;
 use Filament\Support\Facades\FilamentAsset;
 use Livewire\Livewire;
@@ -27,6 +28,8 @@ class GroupSummariesServiceProvider extends PackageServiceProvider
     {
         FilamentAsset::register([
             Css::make(self::STYLESHEET, __DIR__.'/../resources/dist/group-summaries.css')->loadedOnRequest(),
+            // Fetched by Alpine's x-load, only on a page that draws a top summary row.
+            AlpineComponent::make('group-summaries-top', __DIR__.'/../resources/dist/group-summaries-top.js'),
         ], self::PACKAGE);
 
         Livewire::componentHook(ApplyDefaultGroupDirection::class);

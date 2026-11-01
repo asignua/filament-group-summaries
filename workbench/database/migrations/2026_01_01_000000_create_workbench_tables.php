@@ -10,6 +10,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // testbench ships its own users table (no is_active); replace it.
+        Schema::dropIfExists('users');
         Schema::create('users', function (Blueprint $table): void {
             $table->id();
             $table->string('name');

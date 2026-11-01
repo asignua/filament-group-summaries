@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Asignua\FilamentGroupSummaries;
 
 use Closure;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Facades\FilamentAsset;
+
+use function Filament\Support\get_color_css_variables;
+
+use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Tables\Columns\Summarizers\Values;
 use Filament\Tables\Contracts\HasTable;
@@ -36,6 +42,11 @@ class SummaryGroup extends Group
     protected bool|Closure $hidesTrailingSummary = false;
 
     protected string|Closure|null $defaultDirection = null;
+
+    protected SummaryPosition|Closure $position = SummaryPosition::Bottom;
+
+    /** @var array<string, string>|Closure|string|null */
+    protected string|array|Closure|null $color = null;
 
     /** @var array<int, string>|null */
     protected ?array $summaryColumns = null;
@@ -85,6 +96,62 @@ class SummaryGroup extends Group
         return $this;
     }
 
+    /**
+     * Where the group's summary row is drawn: after the records (Filament's own, the default),
+     * right under the header aligned under the columns, or both.
+     */
+    public function position(SummaryPosition|Closure $position): static
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
+    /**
+     * Tints the group header with a Filament colour: a colour name (`'success'`, or any colour registered
+     * with `FilamentColor`), an array map from group key or title to a colour name, or a closure per
+     * group (`$record`, `$title`, `$key`, `$state`) returning a name, an array of shades, or null for
+     * the neutral header.
+     *
+     * @param array<string, string>|Closure|string|null $color
+     */
+    public function color(string|array|Closure|null $color): static
+    {
+        $this->color = $color;
+
+        return $this;
+    }
+
+    public function getPosition(): SummaryPosition
+    {
+        $position = $this->evaluate($this->position);
+
+        return $position instanceof SummaryPosition ? $position : SummaryPosition::Bottom;
+    }
+
+    /**
+     * @param array<string, mixed>|Model $record
+     *
+     * @return array<int, string>|string|null
+     */
+    public function getColor(Model|array $record, string|Htmlable|null $title): string|array|null
+    {
+        $key = $this->getStringKey($record);
+        $titleText = $title instanceof Htmlable ? $title->toHtml() : $title;
+
+        if (is_array($this->color)) {
+            return $this->color[$key ?? ''] ?? $this->color[(string) $titleText] ?? null;
+        }
+
+        $color = $this->evaluate(
+            $this->color,
+            namedInjections: ['record' => $record, 'title' => $title, 'key' => $key, 'state' => $this->getKey($record)],
+            typedInjections: ($record instanceof Model) ? [Model::class => $record, $record::class => $record] : [],
+        );
+
+        return (is_string($color) && $color !== '') || is_array($color) ? $color : null;
+    }
+
     public function hasSummariesInHeader(): bool
     {
         return (bool) $this->evaluate($this->summariesInHeader);
@@ -92,7 +159,7 @@ class SummaryGroup extends Group
 
     public function hidesTrailingSummary(): bool
     {
-        return (bool) $this->evaluate($this->hidesTrailingSummary);
+        return (bool) $this->evaluate($this->hidesTrailingSummary) || !$this->getPosition()->hasBottom();
     }
 
     /**
@@ -128,9 +195,18 @@ class SummaryGroup extends Group
         $description = parent::getDescription($record, $title);
 
         $marker = $this->hidesTrailingSummary() ? '<span hidden data-fi-gs="hide-trailing"></span>' : '';
-        $strip = ($this->hasSummariesInHeader() && $record instanceof Model) ? $this->renderStrip($record) : '';
+        $color = $this->renderColor($record, $title);
+        $summaries = '';
 
-        if ($marker === '' && $strip === '') {
+        if ($record instanceof Model) {
+            if ($this->getPosition()->hasTop()) {
+                $summaries = $this->renderTopRow($record);
+            } elseif ($this->hasSummariesInHeader()) {
+                $summaries = $this->renderStrip($record);
+            }
+        }
+
+        if ($marker === '' && $summaries === '' && $color === '') {
             return $description;
         }
 
@@ -142,22 +218,48 @@ class SummaryGroup extends Group
                 .'</span>';
         }
 
-        return new HtmlString($base.$strip.$marker);
+        return new HtmlString($base.$summaries.$marker.$color);
     }
 
-    private function renderStrip(Model $record): string
+    /**
+     * An empty element that paints the header's tint (see group-summaries.css): it can carry the colour
+     * variables, while the header cell it tints belongs to Filament's view.
+     *
+     * @param array<string, mixed>|Model $record
+     */
+    private function renderColor(Model|array $record, string|Htmlable|null $title): string
+    {
+        $color = $this->getColor($record, $title);
+
+        if ($color === null) {
+            return '';
+        }
+
+        // A closure may return a custom shade map; get_color_css_variables() validates it itself.
+        /** @var array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}|string $color */
+        $variables = get_color_css_variables($color, shades: [400, 500]);
+
+        return $variables === null ? '' : '<span class="fi-gs-color" aria-hidden="true" style="'.e($variables).'"></span>';
+    }
+
+    /**
+     * The summaries of every visible column of one group: `[column name => [column, [html, ...]]]`.
+     *
+     * @return array<string, array{0: Column, 1: array<int, string>}>
+     */
+    private function columnSummaries(Model $record, bool $allColumns): array
     {
         $livewire = $this->getLivewire();
         $query = $livewire->getAllTableSummaryQuery();
 
         if (!$query instanceof Builder) {
-            return '';
+            return [];
         }
 
         $state = $this->groupState($livewire, $query)[(string) $this->getStringKey($record)] ?? [];
         $scoped = $this->scopeQuery($query->clone(), $record);
 
-        $items = [];
+        $result = [];
 
         foreach ($this->getTable()->getVisibleColumns() as $column) {
             if ($this->summaryColumns !== null && !in_array($column->getName(), $this->summaryColumns, true)) {
@@ -170,10 +272,51 @@ class SummaryGroup extends Group
                 $summaries[] = $this->renderSummarizer($summarizer->query($scoped)->selectedState($state));
             }
 
-            if ($summaries === []) {
-                continue;
+            if ($summaries !== [] || $allColumns) {
+                $result[$column->getName()] = [$column, $summaries];
             }
+        }
 
+        return $result;
+    }
+
+    /**
+     * The group's summary row under its header: one cell per visible column, lined up under the table's
+     * header cells by `group-summaries-top.js` (a wrapping strip where that is not possible).
+     */
+    private function renderTopRow(Model $record): string
+    {
+        $columns = $this->columnSummaries($record, allColumns: true);
+
+        if (collect($columns)->every(fn (array $item): bool => $item[1] === [])) {
+            return '';
+        }
+
+        $cells = '';
+
+        foreach ($columns as [$column, $summaries]) {
+            $alignment = $column->getAlignment();
+            $alignment = $alignment instanceof Alignment ? $alignment->value : (string) $alignment;
+            $align = in_array($alignment, ['end', 'right'], true) ? 'end' : ($alignment === 'center' ? 'center' : 'start');
+
+            $label = $this->showsColumnLabels && $summaries !== []
+                ? '<span class="fi-gs-column">'.e($column->getLabel()).'</span>'
+                : '';
+
+            $cells .= '<span class="fi-gs-top-cell fi-gs-align-'.$align.'" data-gs-th="fi-ta-header-cell-'.e(str($column->getName())->camel()->kebab()->toString()).'">'
+                .$label.implode('', $summaries).'</span>';
+        }
+
+        $src = FilamentAsset::getAlpineComponentSrc('group-summaries-top', GroupSummariesServiceProvider::PACKAGE);
+
+        return '<span class="fi-gs-top" x-load x-load-src="'.e($src).'" x-data="groupSummariesTop">'.$cells.'</span>';
+    }
+
+    private function renderStrip(Model $record): string
+    {
+        $items = [];
+
+        foreach ($this->columnSummaries($record, allColumns: false) as [$column, $summaries]) {
             $label = $this->showsColumnLabels
                 ? '<span class="fi-gs-column">'.e($column->getLabel()).'</span>'
                 : '';
