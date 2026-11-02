@@ -1,0 +1,17 @@
+{
+    "shots": [],
+    "covers": [
+        {
+            "html": "../../scripts/art/cover.html",
+            "out": "cover.jpg",
+            "query": {
+                "eyebrow": "Plugin for Filament 5",
+                "title": "Group Summaries",
+                "lead": "Per-group totals on top, at the bottom or both. Colour the group headers to tell the groups apart at a glance.",
+                "chips": "Top / Bottom / Both|Coloured headers|Aligned columns|Dark mode",
+                "shot": "../../filament-group-summaries/art/group-top.jpg",
+                "crop": "677,144,2167,1606"
+            }
+        }
+    ]
+}
