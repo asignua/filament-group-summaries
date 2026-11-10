@@ -2,6 +2,10 @@
 
 All notable changes to `asignua/filament-group-summaries` are documented here.
 
+## v1.2.0 - 2026-11-10
+
+- Requires Filament ^5.11.2; replaced deprecated Filament API calls: none needed in code (phpstan deprecation scan clean; constraint raised from ^5.9).
+
 ## v1.1.0 - 2026-11-01
 
 - `SummaryGroup::position(SummaryPosition|Closure)`: `Bottom` (default, unchanged), `Top` (summary row under the group header, aligned under the table columns; the row after the records is hidden) or `Both`. Requested in filamentphp/filament#19615 (and #20227 for the table-level summary).
