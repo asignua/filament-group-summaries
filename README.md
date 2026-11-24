@@ -185,6 +185,10 @@ vendor/bin/phpunit
 See the [CHANGELOG](https://github.com/asignua/filament-group-summaries/blob/main/CHANGELOG.md) and the
 [LICENSE](https://github.com/asignua/filament-group-summaries/blob/main/LICENSE.md).
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
 ## More plugins by asign
 
 - [XLSX Export](https://filamentphp.com/plugins/asign-xlsx-export) — spreadsheet exports for tables
@@ -193,3 +197,5 @@ See the [CHANGELOG](https://github.com/asignua/filament-group-summaries/blob/mai
 - [Themes](https://filamentphp.com/plugins/asign-themes) — per-user and per-panel colour themes
 
 All plugins: <https://filamentphp.com/plugins?q=asign>
+
+Catalogue of free and commercial plugins: <https://asign.tech/en/plugins>
