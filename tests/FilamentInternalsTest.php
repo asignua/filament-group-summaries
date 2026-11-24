@@ -25,22 +25,16 @@ class FilamentInternalsTest extends TestCase
     }
 
     /**
-     * What Filament's table renders, wherever it lives: up to 5.11 the Blade `index.blade.php`, from 5.12 the PHP
-     * `Table\Concerns\*` traits (the markup is the same, only the file moved).
+     * What Filament's table renders: since 5.12 the PHP `Table\Concerns\*` traits (the Blade `index.blade.php` is gone).
      */
     private function tablesView(): string
     {
-        $package = $this->tablesPackage();
-        $files = array_filter([
-            $package.'/resources/views/index.blade.php',
-            $package.'/src/Table/Concerns/CanGroupRecords.php',
-            $package.'/src/Table/Concerns/CanSummarizeRecords.php',
-            $package.'/src/Table/Concerns/HasRecords.php',
-        ], 'is_file');
+        $concerns = $this->tablesPackage().'/src/Table/Concerns';
 
-        $this->assertNotEmpty($files, 'Filament moved the table rendering again: update tablesView().');
-
-        return implode("\n", array_map(fn (string $file): string => (string) file_get_contents($file), $files));
+        return implode("\n", array_map(
+            fn (string $file): string => (string) file_get_contents($concerns.'/'.$file.'.php'),
+            ['CanGroupRecords', 'CanSummarizeRecords', 'HasRecords'],
+        ));
     }
 
     public function test_the_group_header_still_prints_the_description_unescaped_for_htmlable(): void
@@ -48,16 +42,16 @@ class FilamentInternalsTest extends TestCase
         $view = $this->tablesView();
 
         $this->assertStringContainsString('class="fi-ta-group-description"', $view);
-        $this->assertMatchesRegularExpression('/->getDescription\(\$record, \$recordGroupTitle\)/', $view);
-        // Blade `{{ }}` (<= 5.11) or PHP `e()` (>= 5.12): both print an Htmlable's HTML as it is.
-        $this->assertMatchesRegularExpression('/\{\{ \$recordGroupDescription \}\}|e\(\$recordGroupDescription\)/', $view);
+        $this->assertStringContainsString('->getDescription($record, $recordGroupTitle)', $view);
+        // `e()` prints an Htmlable's HTML as it is.
+        $this->assertStringContainsString('<?= e($recordGroupDescription); ?>', $view);
         $this->assertSame('<b>x</b>', e(new HtmlString('<b>x</b>')));
     }
 
     public function test_the_view_still_computes_the_grouped_summary_state_with_group_query(): void
     {
         $this->assertMatchesRegularExpression(
-            '/getTableSummarySelectedState\(\s*\$(?:this|livewire)->getAllTableSummaryQuery\(\),\s*modifyQueryUsing: fn \((?:Builder|QueryBuilder) \$query\) => \$group->groupQuery\(/',
+            '/getTableSummarySelectedState\(\s*\$livewire->getAllTableSummaryQuery\(\),\s*modifyQueryUsing: fn \(QueryBuilder \$query\) => \$group->groupQuery\(/',
             $this->tablesView(),
         );
     }
@@ -69,18 +63,15 @@ class FilamentInternalsTest extends TestCase
      */
     public function test_summary_rows_markup_the_hide_trailing_css_relies_on(): void
     {
-        $views = $this->tablesPackage().'/resources/views';
+        $row = (string) file_get_contents($this->tablesPackage().'/resources/views/components/summary/row.blade.php');
         $source = $this->tablesView();
-        $summary = (string) file_get_contents($views.'/components/summary/index.blade.php');
-        $row = (string) file_get_contents($views.'/components/summary/row.blade.php');
 
         $this->assertStringContainsString("\$attributes->class(['fi-ta-row fi-ta-summary-row'])", $row);
-        // The page-summary header row: Blade component (<= 5.11) or the same markup built in PHP (>= 5.12).
-        $this->assertStringContainsString('<tr class="fi-ta-row fi-ta-summary-header-row', $summary.$source);
-        $this->assertMatchesRegularExpression('/\$hasPageSummary = \$pageSummary && \(! \$groupsOnly\) && \(?\$records instanceof Paginator\)? && \$records->hasPages\(\);/', $summary.$source);
-        $this->assertMatchesRegularExpression('/if \(\$hasPageSummary\)[^<]*\{?\s*(?:\$html \.= \x27|)<tr class="fi-ta-row fi-ta-summary-header-row/', $summary.$source);
+        $this->assertStringContainsString("\$html .= '<tr class=\"fi-ta-row fi-ta-summary-header-row", $source);
+        $this->assertStringContainsString('$hasPageSummary = $pageSummary && (! $groupsOnly) && ($records instanceof Paginator) && $records->hasPages();', $source);
+        $this->assertMatchesRegularExpression('/if \(\$hasPageSummary\) \{\s*\$html \.= \'<tr class="fi-ta-row fi-ta-summary-header-row/', $source);
         // Group rows and the totals are drawn in the same <tbody> as the records.
-        $this->assertMatchesRegularExpression('/<x-filament-tables::summary\s+:actions="\$hasRecordActionsForAnyRecord"|<tbody>.*?generateSummaryHtml\(/s', $source);
+        $this->assertMatchesRegularExpression('/<tbody>.*?generateSummaryHtml\(/s', $source);
     }
 
     #[DataProvider('signatures')]

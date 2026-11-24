@@ -2,6 +2,10 @@
 
 All notable changes to `asignua/filament-group-summaries` are documented here.
 
+## Unreleased
+
+- Requires Filament ^5.12 (was ^5.11.2): Filament 5.12 moved the table markup from `index.blade.php` into PHP concerns, so the internals test now targets that. Stay on v1.2.0 for Filament 5.11 and older.
+
 ## v1.2.0 - 2026-11-10
 
 - Requires Filament ^5.11.2; replaced deprecated Filament API calls: none needed in code (phpstan deprecation scan clean; constraint raised from ^5.9).

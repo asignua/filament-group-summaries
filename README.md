@@ -40,7 +40,7 @@ Requested in [filamentphp/filament#19615](https://github.com/filamentphp/filamen
 ## Requirements
 
 - PHP 8.3+
-- Filament 5.9+ (`composer.json` requires `^5.9`). Developed and tested against **Filament 5.9** (`filament/tables` v5.9.0). The plugin relies on a few
+- Filament 5.12+ (`composer.json` requires `^5.12`). Developed and tested against **Filament 5.12** (`filament/tables` v5.12.0). The plugin relies on a few
   Filament internals (listed in [How it works](#how-it-works-and-its-trade-offs)); `tests/FilamentInternalsTest.php`
   fails with a message naming what moved if a Filament update breaks one.
 
@@ -126,8 +126,8 @@ For the table's default group use `makeDefaultOn()`; plain `->defaultGroup($grou
 
 ## How it works and its trade-offs
 
-Filament has no hook for a group header, and `index.blade.php` is huge and changes every release, so the view
-is **not overridden**. Instead:
+Filament has no hook for a group header, and the table markup (built in `Table\Concerns\*` since Filament 5.12) changes
+every release, so the view is **not overridden**. Instead:
 
 - **Header summaries.** The header prints the group's *description* with `{{ }}`, which renders any `Htmlable`
   unescaped. `SummaryGroup::getDescription()` returns your description (if any) plus a strip of summaries. The values

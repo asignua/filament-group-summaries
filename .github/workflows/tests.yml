@@ -30,7 +30,7 @@ jobs:
     # shouldRenderTrailingGroupedTableSummary()); keep the lower bound of `filament/filament` honest.
     # Bump this pin together with the constraint in composer.json.
     runs-on: ubuntu-latest
-    name: PHP 8.4 · Filament 5.9.0 (lower bound)
+    name: PHP 8.4 · Filament 5.12.0 (lower bound)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
@@ -38,7 +38,7 @@ jobs:
           php-version: '8.4'
           extensions: pdo_sqlite, intl
           coverage: none
-      - run: composer require "filament/filament:5.9.0" --no-interaction --no-update
+      - run: composer require "filament/filament:5.12.0" --no-interaction --no-update
       - run: composer update --prefer-dist --no-interaction
       - run: vendor/bin/phpunit
 
